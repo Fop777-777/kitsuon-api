@@ -43,6 +43,41 @@ app.post("/api/chat", async (req, res) => {
   }
 });
 
+const mysql = require("mysql2/promise");
+
+// MySQL接続設定（.envから取得）
+const dbConfig = {
+  host: process.env.MYSQL_HOST,
+  user: process.env.MYSQL_USER,
+  password: process.env.MYSQL_PASSWORD,
+  database: process.env.MYSQL_DATABASE
+};
+
+// 例文取得API
+app.get("/api/sentences", async (req, res) => {
+  const kana = req.query.kana;
+
+  if (!kana) {
+    return res.status(400).json({ error: "かな行を指定してください（例: あ, か）" });
+  }
+
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute(
+      "SELECT sentence FROM example_sentences WHERE kana_row = ? ORDER BY RAND() LIMIT 3",
+      [kana]
+    );
+    await connection.end();
+
+    const sentences = rows.map(row => row.sentence);
+    res.json(sentences);
+  } catch (error) {
+    console.error("MySQL接続エラー:", error);
+    res.status(500).json({ error: "データ取得に失敗しました" });
+  }
+});
+
+
 app.listen(port, () => {
   console.log(`GPTプロキシサーバーが起動しました → http://localhost:${port}`);
 });
