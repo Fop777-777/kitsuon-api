@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>吃音症を改善するためのサイト</title>
+  <meta name="description" content="吃音症を改善するためのサイト">
+  <meta name="viewport" content="width=device-width">
+  <script src="./js/toggle-menu.js"></script>
+  <link href="./css/common.css" rel="stylesheet">
+  <link href="./css/weak_point_practice.css" rel="stylesheet">
+</head>
+
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <a class="header-logo" href="./index.html">
+        <img src="./images/namakemono.png" alt="namakemono">
+      </a>
+      <button class="toggle-menu-button"></button>
+      <div class="header-site-menu">
+        <nav class="site-menu">
+          <ul>
+            <li><a href="./read_practice.html">音読練習</a></li>
+            <li><a href="./weak_point_practice.html">苦手練習</a></li>
+            <li><a href="./understand.html">原因を理解する</a></li>
+            <li><a href="./conversation_practice.html">状況別の練習をする</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </header>
+  <main class="main">
+    <div class="read-Practice section">
+      <h1>苦手な文章や単語を登録して練習</h1>
+      <input type="text" id="customInput" placeholder="例：こんにちは、私の名前は〇〇です。">
+      <button onclick="addCustomWord()">追加</button>
+    </div>
+    <div class="metronome-control">
+      <button onclick="startMetronome()">メトロノーム開始</button>
+      <button onclick="stopMetronome()">停止</button>
+    </div>
+    
+
+    <ul id="customWordList"></ul>
+
+    <script>
+      function addCustomWord() {
+        const input = document.getElementById("customInput");
+        const word = input.value.trim();
+        if (!word) return;
+    
+        let stored = JSON.parse(localStorage.getItem("customWords") || "[]");
+        stored.push(word);
+        localStorage.setItem("customWords", JSON.stringify(stored));
+    
+        input.value = "";
+        loadCustomWords();
+      }
+    
+      function loadCustomWords() {
+        const list = document.getElementById("customWordList");
+        list.innerHTML = "";
+    
+        const stored = JSON.parse(localStorage.getItem("customWords") || "[]");
+    
+        stored.forEach((word, index) => {
+          const li = document.createElement("li");
+          const text = document.createElement("span");
+          text.textContent = word;
+    
+          const recordBtn = document.createElement("button");
+          recordBtn.textContent = "録音";
+          const stopBtn = document.createElement("button");
+          stopBtn.textContent = "停止";
+          stopBtn.disabled = true;
+    
+          const playBtn = document.createElement("button");
+          playBtn.textContent = "通常再生";
+          playBtn.disabled = true;
+    
+          const slowBtn = document.createElement("button");
+          slowBtn.textContent = "0.75倍速";
+          slowBtn.disabled = true;
+    
+          const slowerBtn = document.createElement("button");
+          slowerBtn.textContent = "0.5倍速";
+          slowerBtn.disabled = true;
+    
+          const speakBtn = document.createElement("button");
+          speakBtn.textContent = "読み上げ";
+    
+          const deleteBtn = document.createElement("button");
+          deleteBtn.textContent = "削除";
+    
+          const audio = document.createElement("audio");
+          audio.controls = true;
+          audio.style.display = "none";
+    
+          let mediaRecorder;
+          let chunks = [];
+    
+          recordBtn.onclick = async () => {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            chunks = [];
+    
+            mediaRecorder.ondataavailable = e => chunks.push(e.data);
+            mediaRecorder.onstop = () => {
+              const blob = new Blob(chunks, { type: "audio/wav" });
+              const url = URL.createObjectURL(blob);
+              audio.src = url;
+              audio.style.display = "inline";
+              playBtn.disabled = false;
+              slowBtn.disabled = false;
+              slowerBtn.disabled = false;
+            };
+    
+            mediaRecorder.start();
+            recordBtn.disabled = true;
+            stopBtn.disabled = false;
+          };
+    
+          stopBtn.onclick = () => {
+            mediaRecorder.stop();
+            recordBtn.disabled = false;
+            stopBtn.disabled = true;
+          };
+    
+          playBtn.onclick = () => {
+            audio.playbackRate = 1.0;
+            audio.play();
+          };
+    
+          slowBtn.onclick = () => {
+            audio.playbackRate = 0.75;
+            audio.play();
+          };
+    
+          slowerBtn.onclick = () => {
+            audio.playbackRate = 0.5;
+            audio.play();
+          };
+    
+          speakBtn.onclick = () => {
+            const utterance = new SpeechSynthesisUtterance(word);
+            utterance.lang = "ja-JP";
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            speechSynthesis.speak(utterance);
+          };
+    
+          deleteBtn.onclick = () => {
+            if (confirm("この単語を削除しますか？")) {
+              let stored = JSON.parse(localStorage.getItem("customWords") || "[]");
+              stored.splice(index, 1);
+              localStorage.setItem("customWords", JSON.stringify(stored));
+              loadCustomWords();
+            }
+          };
+    
+          li.appendChild(text);
+          li.appendChild(document.createElement("br"));
+          li.appendChild(recordBtn);
+          li.appendChild(stopBtn);
+          li.appendChild(playBtn);
+          li.appendChild(slowBtn);
+          li.appendChild(slowerBtn);
+          li.appendChild(speakBtn);
+          li.appendChild(deleteBtn);
+          li.appendChild(audio);
+          list.appendChild(li);
+        });
+      }
+    
+      // 初回読み込み
+      loadCustomWords();
+
+
+      let metronomeInterval;
+      let clickSound;
+
+      function startMetronome() {
+        if (!clickSound) {
+          clickSound = new Audio("./sounds/metronome.mp3"); // 音声ファイルのパスに注意
+        }
+
+        const bpm = 60; // 1分間に60回（1秒ごと）
+        const interval = 60000 / bpm;
+
+        metronomeInterval = setInterval(() => {
+          clickSound.currentTime = 0;
+          clickSound.play();
+        }, interval);
+      }
+
+      function stopMetronome() {
+        clearInterval(metronomeInterval);
+      }
+
+    </script>
+  </main>
+  <footer>
+    
+  </footer>
+</body>
+
+</html>

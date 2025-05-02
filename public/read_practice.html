@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>吃音症を改善するためのサイト</title>
+  <meta name="description" content="吃音症を改善するためのサイト">
+  <meta name="viewport" content="width=device-width">
+  <script src="./js/toggle-menu.js"></script>
+  <link href="./css/common.css" rel="stylesheet">
+  <link href="./css/read_practice.css" rel="stylesheet">
+</head>
+
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <a class="header-logo" href="./index.html">
+        <img src="./images/namakemono.png" alt="namakemono">
+      </a>
+      <button class="toggle-menu-button"></button>
+      <div class="header-site-menu">
+        <nav class="site-menu">
+          <ul>
+            <li><a href="./read_practice.html">音読練習</a></li>
+            <li><a href="./weak_point_practice.html">苦手練習</a></li>
+            <li><a href="./understand.html">原因を理解する</a></li>
+            <li><a href="./conversation_practice.html">状況別の練習をする</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </header>
+  <main class="main">
+    <body>
+      <div class="select-row">
+        <h1>練習する行を選んでください</h1>
+      </div>
+        <div class="row-buttons" id="rowButtons"></div>
+      <div class="practice-section section">
+        <h2>選んだ行の単語</h2>
+        <ul id="wordList"></ul>
+      </div>      
+
+      <div class="read-Practice section">
+        <h1>音読練習</h1>
+        <p>選んだ単語を順番に読み上げ、録音して確認してみましょう。</p>
+      
+        <button id="startBtn">録音開始</button>
+        <button id="stopBtn" disabled>停止</button>
+        <button id="playBtn" disabled>通常再生</button>
+        <button id="play075Btn" disabled>0.75倍速</button>
+        <button id="play05Btn" disabled>0.5倍速</button>
+      
+        <audio id="audio" controls style="display:none;"></audio>
+        <div class="metronome-control">
+          <button onclick="startMetronome()">メトロノーム開始</button>
+          <button onclick="stopMetronome()">停止</button>
+        </div>
+        
+      </div>
+      
+    
+      <script>
+        const rows = {
+          あ: ["あさ", "あめ", "ありがとう"],
+          か: ["かさ", "かみ", "からい"],
+          さ: ["さかな", "さけ", "さようなら"],
+          た: ["たこ", "たいよう", "たいへん"],
+          な: ["なつ", "なべ", "なまえ"],
+          は: ["はな", "はやい", "はしる"],
+          ま: ["まど", "まいにち", "まるい"],
+          や: ["やま", "やすみ", "やさい"],
+          ら: ["らっぱ", "らいねん", "らくだ"],
+          わ: ["わたし", "わらう", "わかる"],
+        };
+      
+        const rowButtons = document.getElementById("rowButtons");
+        const wordList = document.getElementById("wordList");
+
+        const startBtn = document.getElementById("startBtn");
+        const stopBtn = document.getElementById("stopBtn");
+        const playBtn = document.getElementById("playBtn");
+        const play075Btn = document.getElementById("play075Btn");
+        const play05Btn = document.getElementById("play05Btn");
+        const audioElement = document.getElementById("audio");
+
+        let mediaRecorder;
+        let chunks = [];
+
+        for (const row in rows) {
+          const btn = document.createElement("button");
+          btn.textContent = row + "行";
+          btn.onclick = () => showWords(row);
+          rowButtons.appendChild(btn);
+        }
+
+        function showWords(row) {
+          wordList.innerHTML = "";
+          rows[row].forEach(word => {
+            const li = document.createElement("li");
+            li.textContent = word;
+            wordList.appendChild(li);
+          });
+        }
+
+        startBtn.onclick = async () => {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          chunks = [];
+
+          mediaRecorder.ondataavailable = event => {
+            chunks.push(event.data);
+          };
+
+          mediaRecorder.onstop = () => {
+            const blob = new Blob(chunks, { type: 'audio/wav' });
+            const audioURL = URL.createObjectURL(blob);
+            audioElement.src = audioURL;
+            audioElement.style.display = 'block';
+            playBtn.disabled = false;
+            play075Btn.disabled = false;
+            play05Btn.disabled = false;
+          };
+
+          mediaRecorder.start();
+          startBtn.disabled = true;
+          stopBtn.disabled = false;
+        };
+
+        stopBtn.onclick = () => {
+          mediaRecorder.stop();
+          startBtn.disabled = false;
+          stopBtn.disabled = true;
+        };
+
+        playBtn.onclick = () => {
+          audioElement.playbackRate = 1.0;
+          audioElement.play();
+        };
+
+        play075Btn.onclick = () => {
+          audioElement.playbackRate = 0.75;
+          audioElement.play();
+        };
+
+        play05Btn.onclick = () => {
+          audioElement.playbackRate = 0.5;
+          audioElement.play();
+        };
+        let metronomeInterval;
+        let clickSound;
+
+        function startMetronome() {
+          if (!clickSound) {
+            clickSound = new Audio("./sounds/metronome.mp3"); // 音声ファイルのパスに注意
+          }
+
+          const bpm = 60; // 1分間に60回（1秒ごと）
+          const interval = 60000 / bpm;
+
+          metronomeInterval = setInterval(() => {
+            clickSound.currentTime = 0;
+            clickSound.play();
+          }, interval);
+        }
+
+        function stopMetronome() {
+          clearInterval(metronomeInterval);
+        }
+      </script>
+      
+    </body>
+  </main>
+  <footer>
+    
+  </footer>
+</body>
+
+</html>
