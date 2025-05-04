@@ -20,16 +20,10 @@ const openai = new OpenAI({
 
 // PostgreSQL接続プール
 const pool = new Pool({
-  host: process.env.PG_HOST,
-  port: process.env.PG_PORT,
-  database: process.env.PG_DATABASE,
-  user: process.env.PG_USER,
-  password: process.env.PG_PASSWORD,
-  port: 5432,
-  ssl: {
-    rejectUnauthorized: false,
-  },
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
 });
+
 
 // GPTとの対話API
 app.post("/api/chat", async (req, res) => {
