@@ -1,9 +1,9 @@
 {
   "name": "kitsuon-api",
   "version": "1.0.0",
-  "main": "server/gpt_proxy_server.js",
+  "main": "server/server.js",
   "scripts": {
-    "start": "node server/gpt_proxy_server.js"
+    "start": "node server/server.js"
   },
   "dependencies": {
     "body-parser": "^2.2.0",

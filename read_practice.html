@@ -18,10 +18,10 @@
       <div class="header-site-menu">
         <nav class="site-menu">
           <ul>
-            <li><a href="./read_practice.html">音読練習</a></li>
-            <li><a href="./weak_point_practice.html">苦手練習</a></li>
-            <li><a href="./understand.html">原因を理解する</a></li>
-            <li><a href="./conversation_practice.html">状況別の練習をする</a></li>
+            <li><a href="./read_practice.html">おんどくれんしゅう</a></li>
+            <li><a href="./weak_point_practice.html">にがてれんしゅう</a></li>
+            <li><a href="./understand.html">きつおんをしろう</a></li>
+            <li><a href="./conversation_practice.html">AIとれんしゅう</a></li>
           </ul>
         </nav>
       </div>
@@ -40,7 +40,7 @@
     </div>
 
     <div class="read-Practice section">
-      <h1>音読練習</h1>
+      <h1>おんどくれんしゅう</h1>
       <p>文章を順番に読み上げ、録音して確認してみましょう。</p>
 
       <button id="startBtn">録音開始</button>
@@ -58,21 +58,6 @@
     </div>
   </main>
 
-  <footer class="footer">
-    <nav class="site-menu">
-      <ul>
-        <li><a href="./read_practice.html">音読練習</a></li>
-        <li><a href="./weak_point_practice.html">苦手練習</a></li>
-        <li><a href="./understand.html">原因を理解する</a></li>
-      </ul>
-    </nav>
-    <a class="footer-logo" href="./index.html">
-      <img src="./images/common/logo-footer.png" alt="KISSA">
-    </a>
-    <p class="footer-tel">TEL 01-2345-6789</p>
-    <p class="footer-time">OPEN Fri-Sun 11:00-16:00</p>
-    <p class="copyright"><small>&copy;Kissa</small></p>
-  </footer>
 
   <script>
     const rowButtons = document.getElementById("rowButtons");
@@ -86,9 +71,17 @@
       rowButtons.appendChild(btn);
     });
 
+
     function showWords(row) {
-      fetch(`/api/sentences?kana=${row}`)
-        .then(res => res.json())
+      const apiUrl = `https://kitsuon-site.vercel.app/api/sentences?kana=${row}`;
+
+      fetch(apiUrl)
+        .then(res => {
+          if (!res.ok) {
+            throw new Error(`HTTPエラー: ${res.status}`);
+          }
+          return res.json();
+        })
         .then(sentences => {
           wordList.innerHTML = "";
           const shuffled = sentences.sort(() => 0.5 - Math.random());
@@ -100,7 +93,7 @@
           });
         })
         .catch(error => {
-          console.error("エラー:", error);
+          console.error("取得失敗:", error);
           wordList.innerHTML = "<li>文章の取得に失敗しました。</li>";
         });
     }

@@ -17,10 +17,10 @@
       <div class="header-site-menu">
         <nav class="site-menu">
           <ul>
-            <li><a href="./read_practice.html">音読練習</a></li>
-            <li><a href="./weak_point_practice.html">苦手練習</a></li>
-            <li><a href="./understand.html">原因を理解する</a></li>
-            <li><a href="./conversation_practice.html">状況別の練習をする</a></li>
+            <li><a href="./read_practice.html">おんどくれんしゅう</a></li>
+            <li><a href="./weak_point_practice.html">にがてれんしゅう</a></li>
+            <li><a href="./understand.html">きつおんをしろう</a></li>
+            <li><a href="./conversation_practice.html">AIとれんしゅう</a></li>
           </ul>
         </nav>
       </div>
@@ -45,7 +45,8 @@
       input.value = "";
 
       try {
-        const response = await fetch("http://localhost:3000/api/chat", {
+        const apiBase = "https://kitsuon-api.onrender.com";
+        const response = await fetch(`${apiBase}/api/chat`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"

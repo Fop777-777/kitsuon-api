@@ -4,26 +4,45 @@ const bodyParser = require("body-parser");
 require("dotenv").config();
 
 const { OpenAI } = require("openai");
-const { Pool } = require("pg");
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
+app.use(express.static("public"));
+
 
 // OpenAI初期化
-console.log("APIキー:", process.env.OPENAI_API_KEY);
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// PostgreSQL接続プール
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
-
+// 例文データ（リスト管理）
+const sentencesData = {
+  あ: [
+    "あさがおが咲いた。",
+    "あめがふってきた。",
+    "あかいふうせんが飛んでいった。",
+    "あんぱんを食べた。",
+    "あの山を越えて行こう。",
+  ],
+  か: [
+    "かさを忘れた。",
+    "かみなりが鳴っている。",
+    "かいものに行こう。",
+    "かぜがつよい日だった。",
+    "かべに絵をかざった。",
+  ],
+  さ: [
+    "さかなをつった。",
+    "さくらが満開になった。",
+    "さむい朝だった。",
+    "さんぽに出かけよう。",
+    "さるが木にのぼった。",
+  ],
+  // 他の行も必要に応じて追加
+};
 
 // GPTとの対話API
 app.post("/api/chat", async (req, res) => {
@@ -52,26 +71,25 @@ app.post("/api/chat", async (req, res) => {
   }
 });
 
-// 例文取得API（PostgreSQL版）
-app.get("/api/sentences", async (req, res) => {
+// 例文取得API（リスト版）
+app.get("/api/sentences", (req, res) => {
   const kana = req.query.kana;
 
   if (!kana) {
     return res.status(400).json({ error: "かな行を指定してください（例: あ, か）" });
   }
 
-  try {
-    const { rows } = await pool.query(
-      "SELECT sentence FROM example_sentences WHERE kana_row = $1 ORDER BY RANDOM() LIMIT 3",
-      [kana]
-    );
+  const list = sentencesData[kana];
 
-    const sentences = rows.map((row) => row.sentence);
-    res.json(sentences);
-  } catch (error) {
-    console.error("PostgreSQL接続エラー:", error);
-    res.status(500).json({ error: "データ取得に失敗しました" });
+  if (!list || list.length === 0) {
+    return res.status(404).json({ error: "例文が見つかりませんでした" });
   }
+
+  // ランダムに3件選んで返す
+  const shuffled = list.sort(() => 0.5 - Math.random());
+  const selected = shuffled.slice(0, 3);
+
+  res.json(selected);
 });
 
 app.listen(port, () => {
